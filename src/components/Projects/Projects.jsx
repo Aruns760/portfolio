@@ -54,7 +54,7 @@ const projects = [
       "Gamified portfolio platform featuring XP systems, achievements, streaks, levels, progress tracking, authentication, and modern dashboard UI.",
     tech: ["Next.js", "React", "Node.js", "PostgreSQL", "Tailwind CSS"],
     github: "https://github.com/Aruns760/Level-Up.git",
-    demo: "https://level-up-git-main-aruns760s-projects.vercel.app",
+    demo: "https://level-up-livid.vercel.app/",
     category: "Portfolio Platform",
     featured: true,
     year: "2026",
