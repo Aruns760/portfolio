@@ -657,7 +657,7 @@ function Hero() {
               </a>
 
               {/* View Resume */}
-              <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="hero-btn" style={{
+              <a href="/Arun S-Resume.pdf" target="_blank" rel="noopener noreferrer" className="hero-btn" style={{
                 padding: "13px 28px", borderRadius: "13px",
                 background: "rgba(255,255,255,0.04)",
                 color: "#e2e8f0",
@@ -687,7 +687,7 @@ function Hero() {
               </a>
 
               {/* Download CV */}
-              <a href="/resume.pdf" download className="hero-btn" style={{
+              <a href="/Arun S-Resume.pdf" download className="hero-btn" style={{
                 padding: "13px 28px", borderRadius: "13px",
                 background: "rgba(34,211,238,0.07)",
                 color: "#22d3ee",

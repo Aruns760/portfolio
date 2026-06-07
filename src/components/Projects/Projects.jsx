@@ -24,7 +24,7 @@ const projects = [
     demo: "https://guileless-semolina-df0159.netlify.app/",
     category: "Full Stack",
     featured: true,
-    year: "2024",
+    year: "2025",
     theme: {
       bg:           "linear-gradient(145deg, #12061e 0%, #1e0845 50%, #0d0318 100%)",
       border:       "rgba(181,122,251,0.25)",
@@ -57,7 +57,7 @@ const projects = [
     demo: "https://level-up-git-main-aruns760s-projects.vercel.app",
     category: "Portfolio Platform",
     featured: true,
-    year: "2024",
+    year: "2026",
     theme: {
       bg:           "linear-gradient(145deg, #001a10 0%, #002d1e 50%, #000f09 100%)",
       border:       "rgba(31,216,138,0.25)",
@@ -123,7 +123,7 @@ const projects = [
     demo: "https://aruns760.github.io/todo-app/",
     category: "Frontend",
     featured: false,
-    year: "2023",
+    year: "2024",
     theme: {
       bg:           "linear-gradient(145deg, #001018 0%, #001e2e 50%, #000a10 100%)",
       border:       "rgba(41,212,245,0.25)",

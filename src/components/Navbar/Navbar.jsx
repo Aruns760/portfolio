@@ -361,7 +361,7 @@ function Navbar() {
             {/* Resume CTA */}
             <li style={{ marginLeft: "6px" }}>
               <a
-                href="/resume.pdf"
+                href="/Arun S-Resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="resume-btn"
@@ -571,7 +571,7 @@ function Navbar() {
 
               {/* Resume button */}
               <motion.a
-                href="/resume.pdf"
+                href="/Arun S-Resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}
