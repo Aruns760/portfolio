@@ -3,6 +3,7 @@ import { TypeAnimation } from "react-type-animation";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { fadeUp } from "../../data/animations";
 import arunImg from "../../assets/images/arun.png";
+import arunImg2 from "../../assets/images/arun2.png"; // ← add your second photo here
 
 // ── Add to public/index.html <head> ──────────────────────────────────────────
 // <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -26,15 +27,13 @@ function ParticleCanvas() {
 
     for (let i = 0; i < 80; i++) {
       particles.push({
-        x: Math.random() * 1000, y: Math.random() * 1000,
+        x: Math.random() * (W || 1000), y: Math.random() * (H || 1000),
         r: Math.random() * 1.4 + 0.3,
         vx: (Math.random() - 0.5) * 0.3,
         vy: (Math.random() - 0.5) * 0.3,
         alpha: Math.random() * 0.45 + 0.08,
         hue: Math.random() > 0.5 ? 185 : 265,
       });
-      particles[i].x = Math.random() * W;
-      particles[i].y = Math.random() * H;
     }
 
     const draw = () => {
@@ -115,7 +114,6 @@ function StatCard({ value, label, accent, suffix = "+" }) {
       minWidth: "76px", position: "relative", overflow: "hidden",
       boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 ${accent}15`,
     }}>
-      {/* Corner shine */}
       <div style={{
         position: "absolute", top: 0, right: 0,
         width: "40px", height: "40px",
@@ -142,15 +140,69 @@ function StatCard({ value, label, accent, suffix = "+" }) {
   );
 }
 
-// ─── 3D tilt photo with hexagonal clip + scanline + hologram effects ──────────
-function PhotoFrame() {
+// ─── Terminal bio block ───────────────────────────────────────────────────────
+function TerminalBio() {
+  const lines = [
+    { label: "role",     value: "Full Stack Developer & MCA Student",       color: "#67e8f9" },
+    { label: "stack",    value: "React · Node.js · MongoDB · PostgreSQL",    color: "#a78bfa" },
+    { label: "learning", value: "AI · Machine Learning · Full Stack",         color: "#fb923c" },
+    { label: "status",   value: "Open to internships & opportunities",        color: "#4ade80" },
+  ];
+  return (
+    <div style={{
+      padding: "16px 18px", borderRadius: "14px",
+      background: "rgba(0,0,0,0.4)",
+      border: "1px solid rgba(255,255,255,0.07)",
+      backdropFilter: "blur(14px)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+        {["rgba(255,95,86,0.8)", "rgba(255,189,46,0.8)", "rgba(39,201,63,0.8)"].map((c, i) => (
+          <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
+        ))}
+        <span style={{
+          marginLeft: "6px",
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "9px", color: "rgba(148,163,184,0.35)", letterSpacing: "1px",
+        }}>
+          arun@portfolio ~ info.sh
+        </span>
+      </div>
+      {lines.map((l, i) => (
+        <motion.div
+          key={l.label}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.9 + i * 0.14, duration: 0.4 }}
+          style={{
+            display: "flex", gap: "10px", alignItems: "baseline",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "11px", lineHeight: "1.95",
+          }}
+        >
+          <span style={{ color: "rgba(34,211,238,0.4)", userSelect: "none" }}>$</span>
+          <span style={{ color: "rgba(148,163,184,0.5)", flexShrink: 0 }}>{l.label}:</span>
+          <span style={{ color: l.color }}>{l.value}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Coin Flip Photo Frame ────────────────────────────────────────────────────
+function CoinPhotoFrame() {
+  const [flipped, setFlipped]       = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
   const frameRef = useRef(null);
+
+  // 3D tilt on mouse move (only when not flipping)
   const rotX = useSpring(useMotionValue(0), { stiffness: 100, damping: 18 });
   const rotY = useSpring(useMotionValue(0), { stiffness: 100, damping: 18 });
   const glowX = useTransform(rotY, [-15, 15], ["0%", "100%"]);
   const glowY = useTransform(rotX, [-15, 15], ["0%", "100%"]);
 
   const onMove = (e) => {
+    if (isFlipping) return;
     const rect = frameRef.current?.getBoundingClientRect();
     if (!rect) return;
     const cx = rect.left + rect.width  / 2;
@@ -160,32 +212,53 @@ function PhotoFrame() {
   };
   const onLeave = () => { rotX.set(0); rotY.set(0); };
 
+  // Coin flip trigger
+  const handleFlip = () => {
+    if (isFlipping) return;
+    setIsFlipping(true);
+    rotX.set(0);
+    rotY.set(0);
+    setTimeout(() => {
+      setFlipped((f) => !f);
+      setIsFlipping(false);
+    }, 700); // halfway through flip animation
+  };
+
+  // The Y rotation drives the flip: 0 → front, 180 → back (or 360 → front again)
+  const coinRotateY = useSpring(useMotionValue(flipped ? 180 : 0), {
+    stiffness: 60,
+    damping: 16,
+  });
+
+  useEffect(() => {
+    coinRotateY.set(flipped ? 180 : 0);
+  }, [flipped]);                          // eslint-disable-line
+
   return (
     <motion.div
       ref={frameRef}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      style={{ rotateX: rotX, rotateY: rotY, transformStyle: "preserve-3d", perspective: 900 }}
+      style={{ rotateX: rotX, transformStyle: "preserve-3d", perspective: 900 }}
       className="hero-float"
     >
-      <div style={{ position: "relative", width: "340px", height: "340px",
-        display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{
+        position: "relative", width: "340px", height: "340px",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
 
-        {/* Outer slow spin ring */}
+        {/* ── Orbit rings (unchanged from original) ── */}
         <div style={{
           position: "absolute", inset: "-28px", borderRadius: "50%",
           border: "1px solid rgba(34,211,238,0.15)",
           animation: "heroSpinRing 22s linear infinite reverse",
         }} />
-
-        {/* Mid dashed ring */}
         <div style={{
           position: "absolute", inset: "-14px", borderRadius: "50%",
           border: "2px dashed rgba(167,139,250,0.25)",
           animation: "heroSpinRing 14s linear infinite",
         }} />
-
-        {/* Orbit glowing dot */}
+        {/* Orbit dot cyan */}
         <div style={{
           position: "absolute", inset: "-16px", borderRadius: "50%",
           animation: "heroSpinRing 5s linear infinite",
@@ -198,8 +271,7 @@ function PhotoFrame() {
             boxShadow: "0 0 18px 4px rgba(34,211,238,0.7)",
           }} />
         </div>
-
-        {/* Second orbit dot (purple, opposite) */}
+        {/* Orbit dot purple */}
         <div style={{
           position: "absolute", inset: "-16px", borderRadius: "50%",
           animation: "heroSpinRing 7s linear infinite reverse",
@@ -213,83 +285,181 @@ function PhotoFrame() {
           }} />
         </div>
 
-        {/* Dynamic glow that follows tilt */}
+        {/* Dynamic tilt glow */}
         <motion.div style={{
           position: "absolute", inset: 0, borderRadius: "50%",
           background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(34,211,238,0.22) 0%, transparent 70%)`,
           filter: "blur(18px)", pointerEvents: "none",
         }} />
 
-        {/* Static ambient glow */}
+        {/* Ambient glow */}
         <div style={{
           position: "absolute", inset: 0, borderRadius: "50%",
           background: "radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 65%)",
           filter: "blur(24px)", pointerEvents: "none",
         }} />
 
-        {/* ── Photo container with clipped shape ── */}
-        <div style={{
-          position: "relative", zIndex: 1,
-          width: "300px", height: "300px",
-          borderRadius: "50%",
-          border: "2.5px solid rgba(34,211,238,0.55)",
-          boxShadow: `
-            0 0 0 6px rgba(34,211,238,0.08),
-            0 0 40px rgba(34,211,238,0.22),
-            0 0 80px rgba(34,211,238,0.08),
-            inset 0 0 30px rgba(34,211,238,0.05)
-          `,
-          overflow: "hidden",
-          background: "linear-gradient(145deg, #0a1628, #071220)",
-        }}>
-          {/* Actual photo */}
-          <img
-            src={arunImg}
-            alt="Arun S"
-            style={{
-              width: "100%", height: "100%",
-              objectFit: "cover", objectPosition: "center top",
-              display: "block",
-              filter: "contrast(1.05) saturate(1.1) brightness(1.02)",
-            }}
-          />
-
-          {/* Holographic overlay gradient */}
+        {/* ─────────────────────────────────────────────────────────────────
+            COIN — the whole flip wrapper
+        ───────────────────────────────────────────────────────────────── */}
+        <motion.div
+          style={{
+            position: "relative", zIndex: 1,
+            width: "300px", height: "300px",
+            transformStyle: "preserve-3d",
+            rotateY: coinRotateY,
+            cursor: isFlipping ? "wait" : "pointer",
+          }}
+          onClick={handleFlip}
+          title="Click to flip"
+        >
+          {/* ── FRONT FACE (your main photo) ── */}
           <div style={{
             position: "absolute", inset: 0,
-            background: `linear-gradient(
-              160deg,
-              rgba(34,211,238,0.10) 0%,
-              transparent 40%,
-              rgba(167,139,250,0.08) 80%,
-              transparent 100%
-            )`,
-            mixBlendMode: "screen",
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            borderRadius: "50%",
+            border: "2.5px solid rgba(34,211,238,0.55)",
+            boxShadow: `
+              0 0 0 6px rgba(34,211,238,0.08),
+              0 0 40px rgba(34,211,238,0.22),
+              0 0 80px rgba(34,211,238,0.08),
+              inset 0 0 30px rgba(34,211,238,0.05)
+            `,
+            overflow: "hidden",
+            background: "linear-gradient(145deg, #0a1628, #071220)",
+          }}>
+            <img
+              src={arunImg}
+              alt="Arun S"
+              style={{
+                width: "100%", height: "100%",
+                objectFit: "cover", objectPosition: "center top",
+                display: "block",
+                filter: "contrast(1.05) saturate(1.1) brightness(1.02)",
+              }}
+            />
+            {/* Holographic overlay */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: `linear-gradient(160deg, rgba(34,211,238,0.10) 0%, transparent 40%, rgba(167,139,250,0.08) 80%, transparent 100%)`,
+              mixBlendMode: "screen", pointerEvents: "none",
+            }} />
+            {/* Scanlines */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 3px)",
+            }} />
+            {/* Scan sweep */}
+            <div style={{
+              position: "absolute", left: 0, right: 0, height: "3px",
+              background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.6), transparent)",
+              animation: "heroScan 3s linear infinite",
+              opacity: 0.6, pointerEvents: "none",
+            }} />
+            {/* Bottom fade */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "80px",
+              background: "linear-gradient(to top, rgba(4,10,20,0.85), transparent)",
+              pointerEvents: "none",
+            }} />
+
+            {/* Flip hint label — only on front, disappears after first flip */}
+            {!flipped && (
+              <div style={{
+                position: "absolute", top: "12px", left: "50%",
+                transform: "translateX(-50%)",
+                padding: "4px 12px", borderRadius: "100px",
+                background: "rgba(0,0,0,0.6)",
+                border: "1px solid rgba(34,211,238,0.3)",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "9px", color: "rgba(34,211,238,0.8)",
+                letterSpacing: "1px", whiteSpace: "nowrap",
+                pointerEvents: "none",
+                animation: "coinHintPulse 2.5s ease infinite",
+              }}>
+                ↻ click to flip
+              </div>
+            )}
+          </div>
+
+          {/* ── COIN EDGE (metallic rim visible mid-flip) ── */}
+          <div style={{
+            position: "absolute", inset: 0,
+            borderRadius: "50%",
+            background: "linear-gradient(180deg, #1a3a4a, #0a1220, #1a3a4a)",
+            transform: "translateZ(-1px) scaleX(0.02)",
             pointerEvents: "none",
           }} />
 
-          {/* Scanlines */}
+          {/* ── BACK FACE (second photo / alternate look) ── */}
           <div style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 3px)",
-          }} />
-
-          {/* Scan sweep animation */}
-          <div style={{
-            position: "absolute", left: 0, right: 0, height: "3px",
-            background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.6), transparent)",
-            animation: "heroScan 3s linear infinite",
-            opacity: 0.6, pointerEvents: "none",
-          }} />
-
-          {/* Bottom gradient fade for badge */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            height: "80px",
-            background: "linear-gradient(to top, rgba(4,10,20,0.85), transparent)",
-            pointerEvents: "none",
-          }} />
-        </div>
+            position: "absolute", inset: 0,
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            borderRadius: "50%",
+            border: "2.5px solid rgba(167,139,250,0.55)",
+            boxShadow: `
+              0 0 0 6px rgba(167,139,250,0.08),
+              0 0 40px rgba(167,139,250,0.22),
+              0 0 80px rgba(167,139,250,0.08),
+              inset 0 0 30px rgba(167,139,250,0.05)
+            `,
+            overflow: "hidden",
+            background: "linear-gradient(145deg, #160a28, #0e0718)",
+          }}>
+            <img
+              src={arunImg2}
+              alt="Arun S"
+              style={{
+                width: "100%", height: "100%",
+                objectFit: "cover", objectPosition: "center top",
+                display: "block",
+                filter: "contrast(1.05) saturate(1.1) brightness(1.02)",
+              }}
+            />
+            {/* Purple holographic overlay on back */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: `linear-gradient(160deg, rgba(167,139,250,0.12) 0%, transparent 40%, rgba(244,114,182,0.08) 80%, transparent 100%)`,
+              mixBlendMode: "screen", pointerEvents: "none",
+            }} />
+            {/* Scanlines */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 3px)",
+            }} />
+            {/* Purple scan sweep */}
+            <div style={{
+              position: "absolute", left: 0, right: 0, height: "3px",
+              background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.6), transparent)",
+              animation: "heroScan 2.5s linear infinite",
+              opacity: 0.6, pointerEvents: "none",
+            }} />
+            {/* Bottom fade */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "80px",
+              background: "linear-gradient(to top, rgba(10,4,22,0.85), transparent)",
+              pointerEvents: "none",
+            }} />
+            {/* Flip-back hint */}
+            <div style={{
+              position: "absolute", top: "12px", left: "50%",
+              transform: "translateX(-50%)",
+              padding: "4px 12px", borderRadius: "100px",
+              background: "rgba(0,0,0,0.6)",
+              border: "1px solid rgba(167,139,250,0.3)",
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "9px", color: "rgba(167,139,250,0.8)",
+              letterSpacing: "1px", whiteSpace: "nowrap",
+              pointerEvents: "none",
+            }}>
+              ↺ click to flip back
+            </div>
+          </div>
+        </motion.div>
+        {/* ── end coin ── */}
 
         {/* ── Available badge ── */}
         <div style={{
@@ -315,12 +485,12 @@ function PhotoFrame() {
           </span>
         </div>
 
-        {/* ── Tech tag chips floating around ── */}
+        {/* ── Floating tech chips ── */}
         {[
-          { label: "React", color: "#61dafb", top: "-8px", left: "30px", delay: "0s" },
-          { label: "Node.js", color: "#68a063", top: "20px", right: "-20px", delay: "0.4s" },
+          { label: "React",   color: "#61dafb", top: "-8px",  left: "30px",   delay: "0s" },
+          { label: "Node.js", color: "#68a063", top: "20px",  right: "-20px", delay: "0.4s" },
           { label: "MongoDB", color: "#4db33d", bottom: "40px", left: "-28px", delay: "0.8s" },
-          { label: "Python", color: "#ffd43b", bottom: "-4px", left: "80px", delay: "1.2s" },
+          { label: "Python",  color: "#ffd43b", bottom: "-4px", left: "80px",  delay: "1.2s" },
         ].map((chip) => (
           <div key={chip.label} style={{
             position: "absolute",
@@ -340,61 +510,29 @@ function PhotoFrame() {
             {chip.label}
           </div>
         ))}
+
+        {/* ── Flip indicator dots (like face A / face B) ── */}
+        <div style={{
+          position: "absolute", bottom: "-30px", left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex", gap: "8px", alignItems: "center",
+          zIndex: 4,
+        }}>
+          <div style={{
+            width: "8px", height: "8px", borderRadius: "50%",
+            background: !flipped ? "#22d3ee" : "rgba(255,255,255,0.15)",
+            boxShadow: !flipped ? "0 0 8px #22d3ee" : "none",
+            transition: "all 0.4s",
+          }} />
+          <div style={{
+            width: "8px", height: "8px", borderRadius: "50%",
+            background: flipped ? "#a78bfa" : "rgba(255,255,255,0.15)",
+            boxShadow: flipped ? "0 0 8px #a78bfa" : "none",
+            transition: "all 0.4s",
+          }} />
+        </div>
       </div>
     </motion.div>
-  );
-}
-
-// ─── Terminal bio block ───────────────────────────────────────────────────────
-function TerminalBio() {
-  const lines = [
-    { label: "role",     value: "Full Stack Developer & MCA Student",        color: "#67e8f9" },
-    { label: "stack",    value: "React · Node.js · MongoDB · PostgreSQL",     color: "#a78bfa" },
-    { label: "learning", value: "AI · Machine Learning · Full Stack",          color: "#fb923c" },
-    { label: "status",   value: "Open to internships & opportunities",         color: "#4ade80" },
-  ];
-  return (
-    <div style={{
-      padding: "16px 18px", borderRadius: "14px",
-      background: "rgba(0,0,0,0.4)",
-      border: "1px solid rgba(255,255,255,0.07)",
-      backdropFilter: "blur(14px)",
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-    }}>
-      {/* Terminal title bar */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px",
-      }}>
-        {["rgba(255,95,86,0.8)", "rgba(255,189,46,0.8)", "rgba(39,201,63,0.8)"].map((c, i) => (
-          <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
-        ))}
-        <span style={{
-          marginLeft: "6px",
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "9px", color: "rgba(148,163,184,0.35)",
-          letterSpacing: "1px",
-        }}>
-          arun@portfolio ~ info.sh
-        </span>
-      </div>
-      {lines.map((l, i) => (
-        <motion.div
-          key={l.label}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.9 + i * 0.14, duration: 0.4 }}
-          style={{
-            display: "flex", gap: "10px", alignItems: "baseline",
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "11px", lineHeight: "1.95",
-          }}
-        >
-          <span style={{ color: "rgba(34,211,238,0.4)", userSelect: "none" }}>$</span>
-          <span style={{ color: "rgba(148,163,184,0.5)", flexShrink: 0 }}>{l.label}:</span>
-          <span style={{ color: l.color }}>{l.value}</span>
-        </motion.div>
-      ))}
-    </div>
   );
 }
 
@@ -423,9 +561,9 @@ function Hero() {
           0%,100% { background-position: 0% 50%; }
           50%      { background-position: 100% 50%; }
         }
-        @keyframes heroShimmer {
-          0%   { left: -120%; }
-          100% { left: 160%; }
+        @keyframes coinHintPulse {
+          0%,100% { opacity: 0.8; }
+          50%      { opacity: 0.3; }
         }
         .hero-float { animation: heroFloat 5.5s ease-in-out infinite; }
         .hero-gradient-text {
@@ -465,18 +603,14 @@ function Hero() {
         overflow: "hidden",
         background: "linear-gradient(155deg, #020817 0%, #040d1a 45%, #05091a 100%)",
       }}>
-        {/* Particle net */}
         <ParticleCanvas />
-
-        {/* Grid overlay */}
         <div className="hero-grid-bg" style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }} />
 
-        {/* Mesh glows */}
         <div style={{ position: "absolute", top: "8%",   left: "3%",  width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 70%)",  pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", bottom: "8%", right: "3%", width: "420px", height: "420px", borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.09) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", top: "50%", left: "40%", transform: "translate(-50%,-50%)", width: "700px", height: "350px", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(6,182,212,0.04) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
 
-        {/* ── Main content grid ── */}
+        {/* ── Main grid ── */}
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -488,278 +622,137 @@ function Hero() {
             gap: "clamp(32px, 5vw, 72px)",
             alignItems: "center",
             position: "relative", zIndex: 1,
-            paddingTop: "80px", paddingBottom: "40px",
+            paddingTop: "80px", paddingBottom: "60px",
           }}
         >
           {/* ── LEFT ── */}
           <div>
-            {/* Greeting badge */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, ease: [0.22,1,0.36,1] }}
               style={{
                 display: "inline-flex", alignItems: "center", gap: "8px",
                 padding: "6px 16px", borderRadius: "100px",
                 border: "1px solid rgba(34,211,238,0.28)",
                 background: "rgba(34,211,238,0.06)",
-                backdropFilter: "blur(10px)",
-                marginBottom: "22px",
+                backdropFilter: "blur(10px)", marginBottom: "22px",
               }}
             >
               <span style={{ fontSize: "13px" }}>👋</span>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "10.5px", letterSpacing: "2.5px",
-                color: "#67e8f9", textTransform: "uppercase",
-              }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", letterSpacing: "2.5px", color: "#67e8f9", textTransform: "uppercase" }}>
                 Welcome to my portfolio
               </span>
             </motion.div>
 
-            {/* Name heading */}
             <motion.h1
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.18, ease: [0.22,1,0.36,1] }}
               style={{
                 fontFamily: "'Orbitron', monospace",
-                fontSize: "clamp(15px, 2vw, 22px)",
-                fontWeight: 700, color: "rgba(148,163,184,0.7)",
-                margin: "0 0 4px 0", letterSpacing: "4px",
-                textTransform: "uppercase",
+                fontSize: "clamp(15px, 2vw, 22px)", fontWeight: 700,
+                color: "rgba(148,163,184,0.7)",
+                margin: "0 0 4px 0", letterSpacing: "4px", textTransform: "uppercase",
               }}
             >
               Hi, I'm
             </motion.h1>
 
             <motion.h2
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.26, ease: [0.22,1,0.36,1] }}
               className="hero-gradient-text"
               style={{
                 fontFamily: "'Orbitron', monospace",
-                fontSize: "clamp(38px, 6vw, 72px)",
-                fontWeight: 900, lineHeight: 1.0,
-                letterSpacing: "-1px",
-                margin: "0 0 20px 0",
+                fontSize: "clamp(38px, 6vw, 72px)", fontWeight: 900,
+                lineHeight: 1.0, letterSpacing: "-1px", margin: "0 0 20px 0",
               }}
             >
               Arun S
             </motion.h2>
 
-            {/* Type animation row */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              style={{
-                display: "flex", alignItems: "center", gap: "10px",
-                marginBottom: "22px", minHeight: "36px",
-              }}
+              style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "22px", minHeight: "36px" }}
             >
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "14px", color: "#22d3ee", letterSpacing: "1px",
-                flexShrink: 0,
-              }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "14px", color: "#22d3ee", letterSpacing: "1px", flexShrink: 0 }}>
                 &gt;_
               </span>
-              <span style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: "clamp(16px, 2.2vw, 22px)",
-                fontWeight: 600, color: "#cbd5e1",
-              }}>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(16px, 2.2vw, 22px)", fontWeight: 600, color: "#cbd5e1" }}>
                 <TypeAnimation
-                  sequence={[
-                    "Full Stack Developer", 2200,
-                    "MCA Student",          2000,
-                    "AI / ML Enthusiast",   2000,
-                    "React Developer",      2000,
-                    "Node.js Developer",    2000,
-                  ]}
-                  wrapper="span"
-                  speed={54}
-                  repeat={Infinity}
+                  sequence={["Full Stack Developer", 2200, "MCA Student", 2000, "AI / ML Enthusiast", 2000, "React Developer", 2000, "Node.js Developer", 2000]}
+                  wrapper="span" speed={54} repeat={Infinity}
                 />
               </span>
             </motion.div>
 
-            {/* Description */}
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55 }}
-              style={{
-                color: "#94a3b8",
-                fontSize: "clamp(14px, 1.5vw, 17px)",
-                lineHeight: 1.85,
-                maxWidth: "560px",
-                marginBottom: "26px",
-                fontFamily: "'Space Grotesk', sans-serif",
-              }}
+              style={{ color: "#94a3b8", fontSize: "clamp(14px, 1.5vw, 17px)", lineHeight: 1.85, maxWidth: "560px", marginBottom: "26px", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Passionate about building modern web applications, full-stack systems,
-              machine learning solutions, and interactive user experiences that solve
-              real‑world problems.
+              machine learning solutions, and interactive user experiences that solve real‑world problems.
             </motion.p>
 
-            {/* Terminal bio */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.65 }}
-              style={{ marginBottom: "26px" }}
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} style={{ marginBottom: "26px" }}>
               <TerminalBio />
             </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.82 }}
-              style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "30px" }}
-            >
-              <StatCard value="4"  label="Projects"      accent="#22d3ee" />
-              <StatCard value="12" label="Technologies"  accent="#a78bfa" />
-              <StatCard value="8"  label="Certificates"  accent="#f472b6" />
-              <StatCard value="81" label="BCA %"         accent="#fb923c" suffix="%" />
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.82 }} style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "30px" }}>
+              <StatCard value="4"  label="Projects"     accent="#22d3ee" />
+              <StatCard value="12" label="Technologies" accent="#a78bfa" />
+              <StatCard value="8"  label="Certificates" accent="#f472b6" />
+              <StatCard value="81" label="BCA %"        accent="#fb923c" suffix="%" />
             </motion.div>
 
-            {/* CTA buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0 }}
-              style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
-            >
-              {/* View Projects */}
-              <a href="#projects" className="hero-btn" style={{
-                padding: "13px 28px", borderRadius: "13px",
-                background: "linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)",
-                color: "#fff",
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: "14px", fontWeight: 700,
-                textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                boxShadow: "0 4px 24px rgba(34,211,238,0.28)",
-                letterSpacing: "0.3px", border: "none",
-              }}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }} style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <a href="#projects" className="hero-btn" style={{ padding: "13px 28px", borderRadius: "13px", background: "linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)", color: "#fff", fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 24px rgba(34,211,238,0.28)", letterSpacing: "0.3px", border: "none" }}
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 32px rgba(34,211,238,0.42)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 24px rgba(34,211,238,0.28)"; }}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
                 View Projects
               </a>
-
-              {/* View Resume */}
-              <a href="/Arun S-Resume.pdf" target="_blank" rel="noopener noreferrer" className="hero-btn" style={{
-                padding: "13px 28px", borderRadius: "13px",
-                background: "rgba(255,255,255,0.04)",
-                color: "#e2e8f0",
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: "14px", fontWeight: 600,
-                textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                border: "1px solid rgba(34,211,238,0.28)",
-                backdropFilter: "blur(12px)",
-                letterSpacing: "0.3px",
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor  = "rgba(34,211,238,0.65)";
-                  e.currentTarget.style.boxShadow    = "0 0 22px rgba(34,211,238,0.15)";
-                  e.currentTarget.style.background   = "rgba(34,211,238,0.06)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor  = "rgba(34,211,238,0.28)";
-                  e.currentTarget.style.boxShadow    = "none";
-                  e.currentTarget.style.background   = "rgba(255,255,255,0.04)";
-                }}
+              <a href="/Arun S-Resume.pdf" target="_blank" rel="noopener noreferrer" className="hero-btn" style={{ padding: "13px 28px", borderRadius: "13px", background: "rgba(255,255,255,0.04)", color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", border: "1px solid rgba(34,211,238,0.28)", backdropFilter: "blur(12px)", letterSpacing: "0.3px" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(34,211,238,0.65)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(34,211,238,0.15)"; e.currentTarget.style.background = "rgba(34,211,238,0.06)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(34,211,238,0.28)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 View Resume
               </a>
-
-              {/* Download CV */}
-              <a href="/Arun S-Resume.pdf" download className="hero-btn" style={{
-                padding: "13px 28px", borderRadius: "13px",
-                background: "rgba(34,211,238,0.07)",
-                color: "#22d3ee",
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: "14px", fontWeight: 600,
-                textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                border: "1px solid rgba(34,211,238,0.32)",
-                backdropFilter: "blur(12px)",
-                letterSpacing: "0.3px",
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(34,211,238,0.14)";
-                  e.currentTarget.style.boxShadow  = "0 0 22px rgba(34,211,238,0.22)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(34,211,238,0.07)";
-                  e.currentTarget.style.boxShadow  = "none";
-                }}
+              <a href="/Arun S-Resume.pdf" download className="hero-btn" style={{ padding: "13px 28px", borderRadius: "13px", background: "rgba(34,211,238,0.07)", color: "#22d3ee", fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", border: "1px solid rgba(34,211,238,0.32)", backdropFilter: "blur(12px)", letterSpacing: "0.3px" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(34,211,238,0.14)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(34,211,238,0.22)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(34,211,238,0.07)"; e.currentTarget.style.boxShadow = "none"; }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download CV
               </a>
             </motion.div>
           </div>
 
-          {/* ── RIGHT — Photo ── */}
+          {/* ── RIGHT — Coin Photo ── */}
           <motion.div
             initial={{ opacity: 0, scale: 0.82, x: 30 }}
-            animate={{ opacity: 1, scale: 1,    x: 0  }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
             transition={{ delay: 0.35, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
           >
-            <PhotoFrame />
+            <CoinPhotoFrame />
           </motion.div>
         </motion.div>
 
         {/* ── Scroll indicator ── */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.0 }}
-          style={{
-            position: "absolute", bottom: "28px", left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
-            zIndex: 2,
-          }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.0 }}
+          style={{ position: "absolute", bottom: "28px", left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", zIndex: 2 }}
         >
-          <span style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "9px", letterSpacing: "3px",
-            color: "rgba(148,163,184,0.35)", textTransform: "uppercase",
-          }}>
-            scroll
-          </span>
-          <div style={{
-            width: "22px", height: "36px", borderRadius: "11px",
-            border: "1.5px solid rgba(148,163,184,0.2)",
-            display: "flex", justifyContent: "center", paddingTop: "7px",
-          }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: "3px", color: "rgba(148,163,184,0.35)", textTransform: "uppercase" }}>scroll</span>
+          <div style={{ width: "22px", height: "36px", borderRadius: "11px", border: "1.5px solid rgba(148,163,184,0.2)", display: "flex", justifyContent: "center", paddingTop: "7px" }}>
             <motion.div
               animate={{ y: [0, 11, 0] }}
               transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }}
-              style={{
-                width: "4px", height: "8px", borderRadius: "2px",
-                background: "rgba(34,211,238,0.55)",
-              }}
+              style={{ width: "4px", height: "8px", borderRadius: "2px", background: "rgba(34,211,238,0.55)" }}
             />
           </div>
         </motion.div>
